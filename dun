@@ -1,0 +1,154 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <list>
+#include <vector>
+#include <algorithm>
+#include <random>
+#include "Goat.h"
+
+using namespace std;
+
+const int SZ_NAMES = 200, SZ_COLORS = 25 ;
+
+int select_goat(list<Goat> trip);
+void delete_goat(list<Goat> &trip);
+void add_goat(list<Goat> &trip, string names[], string colors[]);
+void display_trip(list<Goat> trip);
+int main_menu();
+
+void sort_goats_by_name(list<Goat> &trip);
+void find_goat_by_name(const list<Goat> &trip, const string &name);
+void count_goats_by_color(const list<Goat> &trip, const string &color);
+void remove_duplicates(list<Goat> &trip);
+void reverse_goats(list<Goat> &trip);
+void shuffle_goats(list<Goat> &trip);
+void transform_ages(list<Goat> &trip);
+void display_smallest_largest_age(const list<Goat> &trip);
+
+int main() {
+    srand(time(0));
+
+    ifstream fin("names.txt");
+    string names[SZ_NAMES];
+    int i = 0;
+    while (fin >> names[i++]);
+    fin.close();
+
+    ifstream fin1("colors.txt");
+    string colors[SZ_COLORS];
+    i = 0;
+    while (fin1 >> colors[i++]);
+    fin1.close();
+
+    list<Goat> trip;
+    int tripSize = rand() % 8+ 8;
+    for (int i = 0; i < tripSize; i++) {
+        int age = rand() % MAX_AGE;
+        string name = names[rand() % SZ_NAMES];
+        string color = colors[rand() % SZ_COLORS];
+        trip.push_back(Goat(name, age, color));
+    }
+
+    int sel  =main_menu();
+    while(sel != 10) {
+        switch(sel) {
+            case 1: add_goat(trip, names, colors); break;
+            case 2: delete_goat(trip); break;
+            case 3: display_trip(trip); break;
+            case 4: sort_goats_by_name(trip); break;
+            case 5: {
+                string name;
+                cout << "Enter name to find: ";
+                cin >> name;
+                find_goat_by_name(trip, name);
+                break;
+            }
+            case 6: {
+                string color;
+                cout << "Enter color to count: ";
+                cin >> color;
+                count_goats_by_color(trip, color);
+                break;
+            }
+            case 7: remove_duplicates(trip); break;
+            case 8: reverse_goats(trip); break;
+            case 9: shuffle_goats(trip); break;
+            default: cout << "Invalid selection.\n"; break;
+        }
+        sel = main_menu();
+    }
+
+    return 0;
+}
+
+int main_menu() {
+    cout << "\n*** GOAT MANAGER 3001 ***\n";
+    cout << "[1] Add a goat\n";
+    cout << "[2] Delete a goat\n";
+    cout << "[3] List goats\n";
+    cout << "[4] Sort goats by name\n";
+    cout << "[5] Find goat by name\n";
+    cout << "[6] Count goats by color\n";
+    cout << "[7] Remove duplicate goats\n";
+    cout << "[8] Reverse goat list\n";
+    cout << "[9] Shuffle goat list\n";
+    cout << "[10] Quit\n";
+    cout << "Choice --> ";
+    int choice;
+    cin >> choice;
+    while (choice < 1 || choice > 10) {
+        cout << "Invalid, again --> ";
+        cin >> choice;
+    }
+    return choice;
+}
+
+void sort_goats_by_name(list<Goat> &trip) {
+    trip.sort([](const Goat &a, const Goat &b) { return a.get_name() < b.get_name(); });
+    cout << "Goats sorted by name.\n";
+}
+
+void find_goat_by_name(const list<Goat> &trip, const string &name) {
+    auto it = find_if(trip.begin(), trip.end(), [&](const Goat &g) { return g.get_name() == name; });
+    if (it != trip.end()) {
+        cout << "Found: " << it->get_name() << " (" << it->get_age() << ", " << it->get_color() << ")\n";
+    } else {
+        cout << "Goat named " << name << " not found.\n";
+    }
+}
+
+void count_goats_by_color(const list<Goat> &trip, const string &color) {
+    int count = count_if(trip.begin(), trip.end(), [&](const Goat &g) { return g.get_color() == color; });
+    cout << "There are " << count << " goats with color " << color << ".\n";
+}
+
+void remove_duplicates(list<Goat> &trip) {
+    trip.sort([](const Goat &a, const Goat &b) { return a.get_name() < b.get_name(); });
+    trip.unique([](const Goat &a, const Goat &b) { return a.get_name() == b.get_name(); });
+    cout << "Duplicates removed.\n";
+}
+
+void reverse_goats(list<Goat> &trip) {
+    trip.reverse();
+    cout << "Goat list reversed.\n";
+}
+
+void shuffle_goats(list<Goat> &trip) {
+    vector<Goat> temp(trip.begin(), trip.end());
+    shuffle(temp.begin(), temp.end(), default_random_engine(rand()));
+    trip.assign(temp.begin(), temp.end());
+    cout << "Goat list shuffled.\n";
+}
+
+void transform_ages(list<Goat> &trip) {
+    for_each(trip.begin(), trip.end(), [](Goat &g) { g.set_age(g.get_age() + 1); });
+    cout << "All goat ages increased by 1.\n";
+}
+
+void display_trip(list<Goat> trip) {
+    int i = 1;
+    for (auto &gt : trip) {
+        cout << "\t[" << i++ << "] " << gt.get_name() << " (" << gt.get_age() << ", " << gt.get_color() << ")\n";
+    }
+}
